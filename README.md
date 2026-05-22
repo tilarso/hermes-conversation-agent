@@ -56,7 +56,7 @@ You can also use the "Add to Home Assistant" button above to add the custom repo
 2. Click Add Integration.
 3. Search for `Hermes Conversation Agent`.
 4. Enter:
-   - `Hermes URL` (example: `http://192.168.1.74:8765`)
+   - `Hermes URL` (example: `http://example.com:8765`)
    - `API key` (optional)
    - `Verify SSL` (disable only for self-signed/internal TLS setups)
 5. Submit and select `Hermes` in Voice Assistants.
