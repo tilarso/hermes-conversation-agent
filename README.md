@@ -1,6 +1,12 @@
-# Hermes Conversation Agent (Home Assistant custom integration)
+# Home Assistant Hermes Conversation Agent
 
-Hermes Conversation Agent is a Home Assistant custom integration that registers a conversation entity and forwards user utterances to a Hermes gateway using an OpenAI-compatible chat completions endpoint.
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tilarso&repository=hermes-conversation-agent&category=integration)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Contributing](https://img.shields.io/badge/Contributing-Guide-blue.svg)](./CONTRIBUTING.md)
+[![Security](https://img.shields.io/badge/Security-Policy-red.svg)](./SECURITY.md)
+
+Hermes Conversation Agent is a Home Assistant custom integration that registers a conversation agent and forwards user utterances to a Hermes gateway using an OpenAI-compatible chat completions endpoint.
 
 ## Features
 
@@ -10,48 +16,63 @@ Hermes Conversation Agent is a Home Assistant custom integration that registers 
 - Options flow for `model`, `system_prompt`, `timeout`, and `max_history`
 - Safe handling for auth errors, timeouts, and transient gateway failures
 
-## Repository layout
+## What this project is (and is not)
 
-- `custom_components/hermes_conversation/manifest.json`
-- `custom_components/hermes_conversation/__init__.py`
-- `custom_components/hermes_conversation/config_flow.py`
-- `custom_components/hermes_conversation/conversation.py`
-- `custom_components/hermes_conversation/api.py`
-- `custom_components/hermes_conversation/strings.json`
-- `hacs.json`
+This repository contains a Home Assistant integration (`custom_components/hermes_conversation`) that talks to an existing Hermes API endpoint.
+
+It does not install Hermes itself. You must run Hermes separately, then point Home Assistant to that server.
+
+## Prerequisites
+
+- Home Assistant with HACS installed
+- A reachable Hermes gateway/API endpoint
+- Hermes host URL
+- Optional API key if your Hermes deployment requires auth
 
 ## Installation
 
-### HACS (custom repository)
+### Option A: HACS (recommended)
 
-1. In Home Assistant, open HACS -> Integrations -> menu -> Custom repositories.
-2. Add `https://github.com/tilarso/hermes-conversation-agent` with category `Integration`.
-3. Install `Hermes Conversation Agent`.
-4. Restart Home Assistant.
+1. Open HACS -> Integrations.
+2. Open the menu (3 dots) -> Custom repositories.
+3. Add repository URL:
+   - `https://github.com/tilarso/hermes-conversation-agent`
+   - Category: `Integration`
+4. Search for `Hermes Conversation Agent` in HACS and install it.
+5. Restart Home Assistant.
 
-### Manual
+You can also use the "Add to Home Assistant" button above to add the custom repository.
 
-1. Copy `custom_components/hermes_conversation` into your HA config directory.
+### Option B: Manual install
+
+1. Copy `custom_components/hermes_conversation` into your Home Assistant `custom_components` directory.
 2. Restart Home Assistant.
 
-## Setup
+## Configuration
 
-1. Home Assistant -> Settings -> Devices & services -> Add Integration.
-2. Search `Hermes Conversation Agent`.
-3. Enter:
-   - `Hermes URL` (example `http://192.168.1.74:8765`)
+1. Go to Settings -> Devices & Services.
+2. Click Add Integration.
+3. Search for `Hermes Conversation Agent`.
+4. Enter:
+   - `Hermes URL` (example: `http://192.168.1.74:8765`)
    - `API key` (optional)
-   - `Verify SSL` (disable only for self-signed cert setups)
-4. Open Voice Assistants settings and select `Hermes` as conversation agent.
+   - `Verify SSL` (disable only for self-signed/internal TLS setups)
+5. Submit and select `Hermes` in Voice Assistants.
 
-## Development notes
+## Runtime behavior
 
 - The integration posts to `<host>/v1/chat/completions` with `stream=false`.
 - Health validation checks `<host>/api/health` then `<host>/health`.
-- For MVP, thread continuity is mapped 1:1 from HA `conversation_id` to Hermes `thread_id`.
+- For MVP, thread continuity maps Home Assistant `conversation_id` to Hermes `thread_id`.
 
-## Tests
+## Security
 
-Run unit tests with:
+See [SECURITY.md](./SECURITY.md).
 
-python -m pytest -q
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
