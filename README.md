@@ -1,11 +1,12 @@
 # Home Assistant Hermes Conversation Agent
 
-[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tilarso&repository=hermes-conversation-agent&category=integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Contributing](https://img.shields.io/badge/Contributing-Guide-blue.svg)](./CONTRIBUTING.md)
 [![Security](https://img.shields.io/badge/Security-Policy-red.svg)](./SECURITY.md)
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
+
+[![Add to Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tilarso&repository=hermes-conversation-agent&category=integration)
 
 Hermes Conversation Agent is a Home Assistant custom integration that registers a conversation agent and forwards user utterances to a Hermes gateway using an OpenAI-compatible chat completions endpoint.
 
