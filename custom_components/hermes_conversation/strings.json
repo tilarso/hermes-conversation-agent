@@ -1,0 +1,38 @@
+{
+  "config": {
+    "flow_title": "Hermes Conversation Agent",
+    "step": {
+      "user": {
+        "title": "Connect to Hermes",
+        "description": "Enter your Hermes gateway details.",
+        "data": {
+          "host": "Hermes URL",
+          "api_key": "API key",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Hermes.",
+      "auth": "Authentication failed.",
+      "timeout": "Timed out waiting for Hermes."
+    },
+    "abort": {
+      "already_configured": "Hermes host is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Hermes options",
+        "description": "Tune Hermes request behavior.",
+        "data": {
+          "model": "Model override",
+          "system_prompt": "System prompt",
+          "timeout": "Request timeout (seconds)",
+          "max_history": "Conversation history turns"
+        }
+      }
+    }
+  }
+}

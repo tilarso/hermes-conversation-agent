@@ -1,0 +1,12 @@
+{
+  "domain": "hermes_conversation",
+  "name": "Hermes Conversation Agent",
+  "version": "0.1.0",
+  "documentation": "https://github.com/tilarso/hermes-conversation-agent",
+  "issue_tracker": "https://github.com/tilarso/hermes-conversation-agent/issues",
+  "codeowners": ["@tilarso"],
+  "config_flow": true,
+  "integration_type": "service",
+  "dependencies": ["conversation"],
+  "iot_class": "cloud_polling"
+}
