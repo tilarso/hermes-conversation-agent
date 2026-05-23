@@ -1,3 +1,4 @@
+# PRIVACY: Do not log message content or user utterances.
 """Hermes HTTP client for Home Assistant integration."""
 
 from __future__ import annotations
@@ -116,8 +117,12 @@ class HermesClient:
                         continue
 
                     if resp.status >= 400:
-                        body = await resp.text()
-                        raise HermesUnavailableError(f"Hermes HTTP {resp.status}: {body[:200]}")
+                        # Log full body only for debug purposes to prevent leaking private details
+                        # in standard exception strings and logs.
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.debug("Hermes HTTP %d response body: %s", resp.status, await resp.text())
+                        raise HermesUnavailableError(f"Hermes HTTP error: {resp.status}")
 
                     try:
                         return await resp.json()

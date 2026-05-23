@@ -45,9 +45,10 @@ class HermesConversationEntity(conversation.ConversationEntity):
         self._attr_unique_id = f"{entry.entry_id}_conversation"
         self._client = client
         self._max_history = max_history
-        self._history: dict[str, deque[dict[str, str]]] = defaultdict(
-            lambda: deque(maxlen=max(self._max_history * 2, 2))
-        )
+        # Implement an LRU eviction strategy on history entries using OrderedDict to limit max memory usage
+        from collections import OrderedDict
+        self._history: OrderedDict[str, deque[dict[str, str]]] = OrderedDict()
+        self._max_conversations = 100
 
     @property
     def supported_languages(self) -> list[str] | str:
@@ -56,6 +57,15 @@ class HermesConversationEntity(conversation.ConversationEntity):
     async def async_process(self, user_input: conversation.ConversationInput) -> conversation.ConversationResult:
         """Process user input through Hermes and return a conversation result."""
         conversation_id = user_input.conversation_id or str(uuid.uuid4())
+
+        # LRU management: evict oldest if exceeding limit and this is a new conversation
+        if conversation_id not in self._history:
+            if len(self._history) >= self._max_conversations:
+                self._history.popitem(last=False)
+            self._history[conversation_id] = deque(maxlen=max(self._max_history * 2, 2))
+        else:
+            self._history.move_to_end(conversation_id)
+
         history = list(self._history[conversation_id])
 
         try:

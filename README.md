@@ -56,9 +56,13 @@ You can also use the "Add to Home Assistant" button above to add the custom repo
 2. Click Add Integration.
 3. Search for `Hermes Conversation Agent`.
 4. Enter:
-   - `Hermes URL` (example: `http://example.com:8765`)
+   - `Hermes URL` (example: `https://hermes.example.com` or `http://192.168.1.50:8765` for local networks)
    - `API key` (optional)
    - `Verify SSL` (disable only for self-signed/internal TLS setups)
+
+> [!WARNING]
+> Always use HTTPS for production deployments. Disable `Verify SSL` only when testing self-signed certificates on a fully trusted local network.
+
 5. Submit and select `Hermes` in Voice Assistants.
 
 ## Runtime behavior
@@ -70,6 +74,10 @@ You can also use the "Add to Home Assistant" button above to add the custom repo
 ## Security
 
 See [SECURITY.md](./SECURITY.md).
+
+## Privacy
+
+The Home Assistant Hermes Conversation Agent integration transmits user speech/text utterances directly to the user-configured Hermes gateway URL. These utterances are used solely to fulfill voice assistant requests. Always configure the integration with a trusted, private, or secure local/remote Hermes instance.
 
 ## Contributing
 
