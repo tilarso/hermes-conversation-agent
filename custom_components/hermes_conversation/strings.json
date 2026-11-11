@@ -13,6 +13,7 @@
       }
     },
     "error": {
+      "invalid_url": "Enter an HTTP or HTTPS URL without embedded credentials, query parameters, or a fragment.",
       "cannot_connect": "Cannot connect to Hermes.",
       "auth": "Authentication failed.",
       "timeout": "Timed out waiting for Hermes."

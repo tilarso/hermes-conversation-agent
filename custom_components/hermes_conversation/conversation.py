@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
-import uuid
+from typing import Literal
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.intent import IntentResponse
+from homeassistant.helpers.intent import IntentResponse, IntentResponseErrorCode
 
 from .api import HermesAuthError, HermesClient, HermesTimeoutError, HermesUnavailableError
 from .const import DOMAIN
@@ -39,58 +38,57 @@ class HermesConversationEntity(conversation.ConversationEntity):
 
     _attr_has_entity_name = True
     _attr_name = "Hermes"
-    _attr_supported_features = conversation.ConversationEntityFeature.CONTROL
 
     def __init__(self, entry: ConfigEntry, client: HermesClient, max_history: int) -> None:
         self._attr_unique_id = f"{entry.entry_id}_conversation"
         self._client = client
         self._max_history = max_history
-        # Implement an LRU eviction strategy on history entries using OrderedDict to limit max memory usage
-        from collections import OrderedDict
-        self._history: OrderedDict[str, deque[dict[str, str]]] = OrderedDict()
-        self._max_conversations = 100
 
     @property
-    def supported_languages(self) -> list[str] | str:
+    def supported_languages(self) -> list[str] | Literal["*"]:
         return MATCH_ALL
 
-    async def async_process(self, user_input: conversation.ConversationInput) -> conversation.ConversationResult:
+    async def _async_handle_message(
+        self,
+        user_input: conversation.ConversationInput,
+        chat_log: conversation.ChatLog,
+    ) -> conversation.ConversationResult:
         """Process user input through Hermes and return a conversation result."""
-        conversation_id = user_input.conversation_id or str(uuid.uuid4())
-
-        # LRU management: evict oldest if exceeding limit and this is a new conversation
-        if conversation_id not in self._history:
-            if len(self._history) >= self._max_conversations:
-                self._history.popitem(last=False)
-            self._history[conversation_id] = deque(maxlen=max(self._max_history * 2, 2))
-        else:
-            self._history.move_to_end(conversation_id)
-
-        history = list(self._history[conversation_id])
+        # HA owns session IDs, user isolation, busy-turn checks, and expiration.
+        # Send only bounded text history, excluding this turn's user message.
+        history = [
+            {"role": content.role, "content": content.content}
+            for content in chat_log.content[:-1]
+            if isinstance(content, (conversation.UserContent, conversation.AssistantContent))
+            and content.content is not None
+        ][-self._max_history * 2 :]
 
         try:
             text = await self._client.send_message(
                 text=user_input.text,
-                conversation_id=conversation_id,
+                conversation_id=chat_log.conversation_id,
                 history=history,
             )
-        except HermesAuthError:
-            text = "Hermes authentication failed. Check API key in integration settings."
-        except HermesTimeoutError:
-            text = "Hermes did not respond in time. Please try again."
-        except HermesUnavailableError:
-            text = "Hermes is currently unreachable. Please try again shortly."
+        except (HermesAuthError, HermesTimeoutError, HermesUnavailableError) as err:
+            if isinstance(err, HermesAuthError):
+                text = "Hermes authentication failed. Check API key in integration settings."
+            elif isinstance(err, HermesTimeoutError):
+                text = "Hermes did not respond in time. Please try again."
+            else:
+                text = "Hermes is currently unavailable. Please try again shortly."
+            response = IntentResponse(language=user_input.language)
+            response.async_set_error(IntentResponseErrorCode.UNKNOWN, text)
+            chat_log.async_add_assistant_content_without_tools(
+                conversation.AssistantContent(agent_id=user_input.agent_id, content=text)
+            )
+            return conversation.ConversationResult(
+                response=response, conversation_id=chat_log.conversation_id
+            )
 
-        self._history[conversation_id].append({"role": "user", "content": user_input.text})
-        self._history[conversation_id].append({"role": "assistant", "content": text})
-
-        response = IntentResponse(language=user_input.language)
-        response.async_set_speech(text)
-
-        return conversation.ConversationResult(
-            response=response,
-            conversation_id=conversation_id,
+        chat_log.async_add_assistant_content_without_tools(
+            conversation.AssistantContent(agent_id=user_input.agent_id, content=text)
         )
+        return conversation.async_get_result_from_chat_log(user_input, chat_log)
 
     async def async_prepare(self, language: str | None = None) -> None:
         """Prepare entity for use (no-op for MVP)."""

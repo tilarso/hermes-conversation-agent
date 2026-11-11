@@ -26,10 +26,14 @@ It does not install Hermes itself. You must run Hermes separately, then point Ho
 
 ## Prerequisites
 
-- Home Assistant with HACS installed
+- Home Assistant 2026.11.0 or newer (HACS is optional for manual installation)
 - A reachable Hermes gateway/API endpoint
 - Hermes host URL
 - Optional API key if your Hermes deployment requires auth
+
+The minimum version uses Home Assistant's context-aware chat sessions, including
+conversation ownership checks. CI tests the minimum supported version, the latest
+stable release, and the newest available prerelease (or stable when no newer beta exists).
 
 ## Installation
 
@@ -56,12 +60,14 @@ You can also use the "Add to Home Assistant" button above to add the custom repo
 2. Click Add Integration.
 3. Search for `Hermes Conversation Agent`.
 4. Enter:
-   - `Hermes URL` (example: `https://hermes.example.com` or `http://192.168.1.50:8765` for local networks)
+   - `Hermes URL` (example: `https://hermes.example.com`)
    - `API key` (optional)
    - `Verify SSL` (disable only for self-signed/internal TLS setups)
 
 > [!WARNING]
 > Always use HTTPS for production deployments. Disable `Verify SSL` only when testing self-signed certificates on a fully trusted local network.
+> Disabling certificate verification exposes credentials and conversations to interception.
+> Prefer a certificate trusted by Home Assistant instead.
 
 5. Submit and select `Hermes` in Voice Assistants.
 
@@ -69,7 +75,17 @@ You can also use the "Add to Home Assistant" button above to add the custom repo
 
 - The integration posts to `<host>/v1/chat/completions` with `stream=false`.
 - Health validation checks `<host>/api/health` then `<host>/health`.
-- For MVP, thread continuity maps Home Assistant `conversation_id` to Hermes `thread_id`.
+- Home Assistant manages chat logs, session IDs, expiration, and user ownership.
+  Its `conversation_id` is forwarded as both `conversation_id` and `thread_id`.
+- `max_history` limits the previous text turns sent to Hermes, not HA's own chat log.
+- Saving changed options automatically reloads this integration, not Home Assistant.
+- Only read-only health requests may be retried. Chat requests are never automatically
+  replayed, since Hermes may already have executed an action before an error.
+- Redirects are rejected. Configure the final backend URL directly, without embedded
+  credentials, query parameters, or fragments. Trusted LAN URLs remain supported.
+- JSON responses are limited to 1 MiB after decompression, including chunked responses.
+- Replies are non-streaming text. This integration does not expose HA's LLM tools
+  and does not advertise native device control. Backend-side tools are configured separately.
 
 ## Security
 

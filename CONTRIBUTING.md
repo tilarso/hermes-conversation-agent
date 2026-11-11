@@ -39,19 +39,34 @@ Example branch naming:
 git clone https://github.com/tilarso/hermes-conversation-agent.git
 cd hermes-conversation-agent
 
-python3 -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install pytest aiohttp voluptuous
+python -m pip install -r requirements-test.txt 'homeassistant==2026.11.1'
+python scripts/install_ha_test_dependencies.py
 ```
 
 Run tests from repo root:
 
 ```bash
-PYTHONPATH=. python -m pytest -q
+python -m pytest -q
+python -m ruff check custom_components tests scripts
 ```
 
-Tests use stubs/mocks for Home Assistant modules, so a full Home Assistant runtime is not required for this suite.
+Tests use the real installed Home Assistant framework. The fixtures create an isolated
+temporary HA configuration; no running home or real Hermes endpoint is contacted.
+Network-boundary tests use a local HTTP server. The platform test loads the real HA
+conversation entity, calls its public API, verifies an options-triggered reload, and unloads it.
+
+To test another HA build, install that version and rerun
+`python scripts/install_ha_test_dependencies.py` before running the suite. This installs
+the conversation dependencies declared by that build instead of copying stale pins.
+Use separate virtual environments for each version. Unset an inherited `PYTHONPATH`
+when it points to another environment's site-packages.
+
+CI covers HA 2026.11.0, latest stable, and the latest available build including prereleases.
+HA 2026.10.4 was also checked: its chat session implementation lacks the user ownership
+checks required by this integration's privacy contract, so it is not supported.
 
 ## Coding standards
 

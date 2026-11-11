@@ -56,7 +56,25 @@ We follow coordinated disclosure practices:
 
 ## Security Design Principles
 
-- **Configurable transport security:** HTTPS is supported via `verify_ssl`; for remote/untrusted networks, use TLS-enabled Hermes endpoints.
+- **Configurable transport security:** Use an `https://` backend URL for TLS.
+  `verify_ssl` controls certificate verification and defaults to true; it does not
+  add encryption to an `http://` URL. Disabling verification permits interception.
 - **No credential logging:** API keys and secrets must never be logged.
 - **Input validation:** User-supplied values are validated to reduce unsafe targets and malformed requests.
 - **Least privilege:** The integration requests only the Home Assistant functionality needed for operation.
+
+## Credentials, history, and endpoint trust
+
+- API keys use Home Assistant's standard config-entry storage. This integration
+  adds no encryption at rest. Protect HA's configuration directory and backups.
+- Configure only a backend you trust. Local network hosts are intentionally allowed;
+  URL syntax validation is not an SSRF sandbox or a network access-control policy.
+- Embedded URL credentials, query parameters, fragments, and redirects are rejected.
+- The integration never logs raw HTTP response bodies, even at debug level.
+  HA's own conversation debug logging may include messages; treat diagnostic logs as private.
+- HA manages chat-session ownership and expiration. Outbound text history is bounded
+  by `max_history`; the integration does not keep a second history cache. This does not
+  control history retained by the Hermes backend.
+- Successful JSON responses are limited to 1 MiB of decompressed bytes, including
+  responses without a Content-Length header. Error bodies are not read or logged.
+- Chat POSTs are not retried automatically: an error does not prove that no action occurred.

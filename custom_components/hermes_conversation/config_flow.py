@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import HermesAuthError, HermesClient, HermesTimeoutError, HermesUnavailableError
+from .api import HermesAuthError, HermesClient, HermesTimeoutError, HermesUnavailableError, validate_host
 from .const import (
     CONF_MAX_HISTORY,
     CONF_MODEL,
@@ -35,6 +35,12 @@ class HermesConversationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            try:
+                validate_host(user_input[CONF_HOST])
+            except ValueError:
+                return self.async_show_form(
+                    step_id="user", data_schema=_user_schema(), errors={"base": "invalid_url"}
+                )
             await self.async_set_unique_id(user_input[CONF_HOST])
             self._abort_if_unique_id_configured()
 
@@ -69,20 +75,17 @@ class HermesConversationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
-        return HermesConversationOptionsFlow(config_entry)
+        return HermesConversationOptionsFlow()
 
 
-class HermesConversationOptionsFlow(config_entries.OptionsFlow):
+class HermesConversationOptionsFlow(config_entries.OptionsFlowWithReload):
     """Options flow for Hermes Conversation Agent."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self._config_entry = config_entry
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = self._config_entry.options
+        options = self.config_entry.options
         return self.async_show_form(step_id="init", data_schema=_options_schema(options))
 
 
