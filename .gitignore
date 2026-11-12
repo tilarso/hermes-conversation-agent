@@ -6,3 +6,13 @@ __pycache__/
 .env
 *.log
 *.sqlite3
+
+# Internal plans and reviews belong outside the public repository.
+/docs/
+/plans/
+/reports/
+/audits/
+/CI-*.md
+/PROJECT_BRIEF.md
+/SECURITY-REVIEW.md
+/architecture.md
